@@ -11,12 +11,14 @@ import (
 type APIServer struct {
 	config *Config
 	logger *logrus.Logger
+	router *gin.Engine
 }
 
 func New(config *Config) *APIServer {
 	return &APIServer{
 		config: config,
 		logger: logrus.New(),
+		router: gin.Default(),
 	}
 }
 
@@ -44,7 +46,9 @@ func (s *APIServer) configureLogger() error {
 }
 
 func (s *APIServer) configureRoute() {
-	r := gin.Default()
+	r := s.router
+	r.LoadHTMLGlob("html/*.html")
+	r.GET("/", s.handlerIndex)
 	r.GET("/ping", s.handleFunc)
 	if err := r.Run(s.config.BindAddr); err != nil {
 		log.Fatal(err)
@@ -53,7 +57,7 @@ func (s *APIServer) configureRoute() {
 
 func (s *APIServer) handleFunc(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"message": s.handleHello(),
+		"message": "pong",
 	})
 }
 
@@ -64,4 +68,8 @@ func (s *APIServer) handleHello() http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func (s *APIServer) handlerIndex(c *gin.Context) {
+	c.HTML(200, "index.html", gin.H{})
 }

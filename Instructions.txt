@@ -1,0 +1,13 @@
+
+
+//Create migrate
+migrate create -ext 'extension' (sql) -dir 'your directory' 'name for migrations'
+
+// Create database
+createdb api_server
+
+//Migrating
+migrate -path ./'your path' -database "postgres://'user':'password'@localhost/'dbname'?sslmode=disable" up
+
+//Viewing table
+psql -d api_test -c "\d 'your table'"

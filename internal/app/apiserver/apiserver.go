@@ -1,9 +1,9 @@
 package apiserver
 
 import (
+	"ApiServer/internal/app/store"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"io"
 	"log"
 	"net/http"
 )
@@ -12,6 +12,7 @@ type APIServer struct {
 	config *Config
 	logger *logrus.Logger
 	router *gin.Engine
+	store  *store.Store
 }
 
 func New(config *Config) *APIServer {
@@ -31,6 +32,10 @@ func (s *APIServer) Start() error {
 
 	s.configureRoute()
 
+	if err := s.configureStore(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -47,7 +52,7 @@ func (s *APIServer) configureLogger() error {
 
 func (s *APIServer) configureRoute() {
 	r := s.router
-	r.LoadHTMLGlob("html/*.html")
+	r.LoadHTMLGlob("web/templates/*.html")
 	r.GET("/", s.handlerIndex)
 	r.GET("/ping", s.handleFunc)
 	if err := r.Run(s.config.BindAddr); err != nil {
@@ -55,19 +60,20 @@ func (s *APIServer) configureRoute() {
 	}
 }
 
+func (s *APIServer) configureStore() error {
+	st := store.New(s.config.Store)
+	if err := st.Open(); err != nil {
+		return err
+	}
+	s.store = st
+
+	return nil
+}
+
 func (s *APIServer) handleFunc(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "pong",
 	})
-}
-
-func (s *APIServer) handleHello() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, "pong")
-		if err != nil {
-			return
-		}
-	}
 }
 
 func (s *APIServer) handlerIndex(c *gin.Context) {

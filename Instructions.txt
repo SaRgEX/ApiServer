@@ -1,13 +1,24 @@
+// Change the active console Code Page
+chcp 1251
 
-
-//Create migrate
+// Create migrate
 migrate create -ext 'extension' (sql) -dir 'your directory' 'name for migrations'
 
 // Create database
-createdb api_server
+createdb exmpleDB
 
-//Migrating
+// Drop database
+dropdb exmpleDB
+
+// Migrate up
 migrate -path ./'your path' -database "postgres://'user':'password'@localhost/'dbname'?sslmode=disable" up
 
-//Viewing table
-psql -d api_test -c "\d 'your table'"
+// Migrate down
+migrate -path ./'your path' -database "postgres://'user':'password'@localhost/'dbname'?sslmode=disable" down
+
+// Migrate drop everything inside database
+migrate -path ./'your path' -database "postgres://'user':'password'@localhost/'dbname'?sslmode=disable" drop
+
+
+// Viewing table
+psql -d exmpleDB -c "\d 'your table'"

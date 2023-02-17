@@ -6,10 +6,10 @@ import (
 )
 
 type Student struct {
-	ID                int
-	Login             string
-	Password          string
-	EncryptedPassword string
+	ID                int    `json:"id"`
+	Login             string `json:"login"`
+	Password          string `json:"password,omitempty"`
+	EncryptedPassword string `json:"-"`
 }
 
 func (s *Student) Validate() error {
@@ -29,6 +29,14 @@ func (s *Student) BeforeCreate() error {
 		s.EncryptedPassword = enc
 	}
 	return nil
+}
+
+func (s *Student) Sanitaize() {
+	s.Password = ""
+}
+
+func (s *Student) ComparePassword(password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(s.EncryptedPassword), []byte(password)) == nil
 }
 
 func encryptString(s string) (string, error) {

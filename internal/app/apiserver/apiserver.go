@@ -1,81 +1,43 @@
 package apiserver
 
 import (
-	"ApiServer/internal/app/store"
-	"github.com/gin-gonic/gin"
+	"ApiServer/internal/app/store/sqlstore"
+	"database/sql"
+	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
-	"log"
 	"net/http"
 )
 
-type APIServer struct {
-	config *Config
-	logger *logrus.Logger
-	router *gin.Engine
-	store  *store.Store
+func Start(config *Config) error {
+	db, err := newDB(config.DatabaseURL)
+	if err != nil {
+		return nil
+	}
+	defer db.Close()
+	store := sqlstore.New(db)
+	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
+	srv := newServer(store, sessionStore)
+	return http.ListenAndServe(config.BindAddr, srv)
 }
 
-func New(config *Config) *APIServer {
-	return &APIServer{
-		config: config,
-		logger: logrus.New(),
-		router: gin.Default(),
+func newDB(databaseURL string) (*sql.DB, error) {
+	db, err := sql.Open("postgres", databaseURL)
+	if err != nil {
+		return nil, err
 	}
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
-func (s *APIServer) Start() error {
-	if err := s.configureLogger(); err != nil {
-		return err
-	}
-
-	s.logger.Info("starting api server")
-
-	s.configureRoute()
-
-	if err := s.configureStore(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *APIServer) configureLogger() error {
-	level, err := logrus.ParseLevel(s.config.LogLevel)
+func configureLogger(config *Config) error {
+	level, err := logrus.ParseLevel(config.LogLevel)
 	if err != nil {
 		return err
 	}
 
-	s.logger.SetLevel(level)
+	logrus.SetLevel(level)
 
 	return nil
-}
-
-func (s *APIServer) configureRoute() {
-	r := s.router
-	r.LoadHTMLGlob("web/templates/*.html")
-	r.GET("/", s.handlerIndex)
-	r.GET("/ping", s.handleFunc)
-	if err := r.Run(s.config.BindAddr); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (s *APIServer) configureStore() error {
-	st := store.New(s.config.Store)
-	if err := st.Open(); err != nil {
-		return err
-	}
-	s.store = st
-
-	return nil
-}
-
-func (s *APIServer) handleFunc(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": "pong",
-	})
-}
-
-func (s *APIServer) handlerIndex(c *gin.Context) {
-	c.HTML(200, "index.html", gin.H{})
 }

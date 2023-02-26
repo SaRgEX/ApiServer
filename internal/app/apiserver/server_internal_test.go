@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
@@ -108,6 +109,7 @@ func TestServer_HandleSessionsCreate(t *testing.T) {
 }
 
 func TestServer_AuthenticateStudent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	store := teststore.New()
 	student := model.TestStudent(t)
 	store.Student().Create(student)
@@ -132,16 +134,14 @@ func TestServer_AuthenticateStudent(t *testing.T) {
 	secretKey := []byte("secret")
 	s := newServer(store, sessions.NewCookieStore(secretKey))
 	sc := securecookie.New(secretKey, nil)
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest(http.MethodGet, "/", nil)
+			w, _ := gin.CreateTestContext(rec)
+			s.authenticateStudent(w)
 			cookieStr, _ := sc.Encode(sessionName, tc.cookieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", sessionName, cookieStr))
-			s.authenticateStudent(handler).ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}

@@ -3,7 +3,6 @@ package apiserver
 import (
 	"ApiServer/internal/app/model"
 	"ApiServer/internal/app/store"
-	"context"
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
@@ -20,7 +19,7 @@ type server struct {
 }
 
 const (
-	sessionName        = "main"
+	sessionName        = "student_session"
 	ctxKeyUser  ctxKey = iota
 )
 
@@ -48,20 +47,21 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) configureRouter() {
-
+	s.router.Static("/assets/", "web/")
+	s.router.LoadHTMLGlob("./web/templates/*.html")
+	s.router.GET("/", s.handlerIndex)
+	s.router.GET("/authorization", s.handlerAuthorization)
 	s.router.Handle("POST", "/student", s.handleStudentCreate())
-	s.router.Handle("POST", "/session", s.handleSessionsCreate())
-	s.router.Handle("GET", "/whoAmI", s.handleWhoAmI())
-	//private := s.router.Group("/private")
-	//private.Use(s.authenticateStudent)
-	//
-	//{
-	//	auth := private.Group("/")
-	//	{
-	//		auth.GET("/", s.handleWhoAmI())
-	//	}
-	//
-	//}
+	s.router.Handle("POST", "/session", s.handleSessionsCreate)
+	private := s.router.Group("/private")
+	private.Use(s.authenticateStudent)
+	{
+		auth := private.Group("/")
+		{
+			auth.GET("/whoAmI", s.handleWhoAmI)
+		}
+
+	}
 }
 
 func (s *server) handleStudentCreate() gin.HandlerFunc {
@@ -73,7 +73,7 @@ func (s *server) handleStudentCreate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		req := &request{}
 		if err := json.NewDecoder(c.Request.Body).Decode(req); err != nil {
-			s.error(c.Writer, c.Request, http.StatusBadRequest, c.Error(err))
+			s.error(c, http.StatusBadRequest, c.Error(err))
 			return
 		}
 
@@ -82,11 +82,11 @@ func (s *server) handleStudentCreate() gin.HandlerFunc {
 			Password: req.Password,
 		}
 		if err := s.store.Student().Create(student); err != nil {
-			s.error(c.Writer, c.Request, http.StatusUnprocessableEntity, err)
+			s.error(c, http.StatusUnprocessableEntity, err)
 		}
 
 		student.Sanitaize()
-		s.respond(c.Writer, c.Request, http.StatusCreated, student)
+		s.respond(c, http.StatusCreated, student)
 	}
 }
 
@@ -94,77 +94,79 @@ func (s *server) configureLogger() {
 	s.logger.SetLevel(s.logger.Level)
 }
 
-func (s *server) authenticateStudent(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := s.sessionStore.Get(r, sessionName)
-		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-		id, ok := session.Values["user_id"]
-		if !ok {
-			s.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
-			return
-		}
+func (s *server) authenticateStudent(c *gin.Context) {
+	session, err := s.sessionStore.Get(c.Request, sessionName)
+	if err != nil {
+		s.error(c, http.StatusInternalServerError, err)
+	}
 
-		stud, err := s.store.Student().Find(id.(int))
-		if err != nil {
-			s.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
-			return
-		}
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKeyUser, stud)))
+	id, ok := session.Values["student_id"]
+	if !ok {
+		s.error(c, http.StatusUnauthorized, errNotAuthenticated)
+		return
+	}
+	student, err := s.store.Student().Find(id.(int))
+	if err != nil {
+		s.error(c, http.StatusUnauthorized, errNotAuthenticated)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"ctxKey":  ctxKeyUser,
+		"Student": student,
 	})
 }
 
-func (s *server) handleWhoAmI() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		s.respond(c.Writer, c.Request, http.StatusOK, c.Request.Context().Value(ctxKeyUser).(model.Student))
-	}
+func (s *server) handleWhoAmI(c *gin.Context) {
+	s.respond(c, http.StatusOK, nil)
 }
 
-func (s *server) handleSessionsCreate() gin.HandlerFunc {
+func (s *server) handleSessionsCreate(c *gin.Context) {
 	type request struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`
 	}
-
-	return func(c *gin.Context) {
-		req := &request{}
-		if err := json.NewDecoder(c.Request.Body).Decode(req); err != nil {
-			s.error(c.Writer, c.Request, http.StatusBadRequest, c.Error(err))
-			return
-		}
-
-		student, err := s.store.Student().FindByLogin(req.Login)
-		if err != nil || !student.ComparePassword(req.Password) {
-			s.error(c.Writer, c.Request, http.StatusUnauthorized, errIncorrectLoginOrPassword)
-			return
-		}
-		session, err := s.sessionStore.Get(c.Request, sessionName)
-		if err != nil {
-			s.error(c.Writer, c.Request, http.StatusInternalServerError, err)
-			return
-		}
-		session.Values["user_id"] = student.ID
-		if err := s.sessionStore.Save(c.Request, c.Writer, session); err != nil {
-			s.error(c.Writer, c.Request, http.StatusInternalServerError, err)
-			return
-		}
-
-		s.respond(c.Writer, c.Request, http.StatusOK, nil)
+	req := &request{}
+	if err := json.NewDecoder(c.Request.Body).Decode(req); err != nil {
+		s.error(c, http.StatusBadRequest, c.Error(err))
+		return
 	}
+
+	student, err := s.store.Student().FindByLogin(req.Login)
+	if err != nil || !student.ComparePassword(req.Password) {
+		s.error(c, http.StatusUnauthorized, errIncorrectLoginOrPassword)
+		return
+	}
+	session, err := s.sessionStore.Get(c.Request, sessionName)
+	if err != nil {
+		s.error(c, http.StatusInternalServerError, err)
+		return
+	}
+	session.Values["student_id"] = student.ID
+	if err := s.sessionStore.Save(c.Request, c.Writer, session); err != nil {
+		s.error(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	s.respond(c, http.StatusOK, nil)
+
 }
 
-func (s *server) error(w http.ResponseWriter, r *http.Request, code int, err error) {
-	s.respond(w, r, code, map[string]string{"error": err.Error()})
+func (s *server) error(c *gin.Context, code int, err error) {
+	s.respond(c, code, map[string]string{"error": err.Error()})
 }
 
-func (s *server) respond(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
-	w.WriteHeader(code)
+func (s *server) respond(c *gin.Context, code int, data interface{}) {
+	c.Writer.WriteHeader(code)
 	if data != nil {
-		if err := json.NewEncoder(w).Encode(data); err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
-			return
-		}
+		c.JSON(code, data)
 	}
+}
+
+func (s *server) handlerIndex(context *gin.Context) {
+	context.HTML(http.StatusOK, "index.html", gin.H{
+		"message": "Hello world!",
+	})
+}
+
+func (s *server) handlerAuthorization(context *gin.Context) {
+	context.HTML(http.StatusOK, "authorization.html", gin.H{})
 }

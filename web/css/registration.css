@@ -1,0 +1,39 @@
+* {
+  box-sizing: border-box;
+  font-family: "Times New Roman", serif;
+}
+
+body {
+  background: #333333;
+}
+
+.container {
+  background: #f0f0f0;
+  z-index: 1;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  transform: translate(-50%, -50%);
+  border: 3px solid #f1f1f1;
+  border-radius: 15px;
+  box-shadow: 4px 4px 20px #cccccc;
+}
+.container .container-body {
+  display: grid;
+  padding: 15px;
+  row-gap: 10px;
+}
+.container .container-body > input,
+.container .container-body > button {
+  border: #cccccc solid;
+  border-radius: 6px;
+  padding: 6px;
+  outline: none;
+}
+.container .container-body > button:hover {
+  background: #989797;
+  cursor: pointer;
+}
+
+/*# sourceMappingURL=registration.css.map */

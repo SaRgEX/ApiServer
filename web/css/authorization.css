@@ -1,10 +1,13 @@
-body * {
+* {
   font-family: "Times New Roman", serif;
   box-sizing: border-box;
 }
 
+body {
+  background: #333333;
+}
+
 .container {
-  background: #f0f0f0;
   z-index: 1;
   position: fixed;
   top: 50%;
@@ -18,7 +21,6 @@ body * {
   padding: 15px;
   row-gap: 10px;
 }
-
 .container > input,
 .container > button {
   border-block: #f1f1f1;
@@ -27,16 +29,14 @@ body * {
   padding: 5px;
   outline: none;
 }
-
-.container > button:hover {
-  cursor: pointer;
-  background: #cccccc;
-}
-
 .container > label {
   margin-left: auto;
   margin-right: auto;
   text-shadow: 4px 4px 5px #c2c2c2;
+}
+.container > button:hover {
+  cursor: pointer;
+  background: #cccccc;
 }
 
 .popup {
@@ -56,6 +56,17 @@ body * {
   text-align: center;
   position: relative;
   opacity: 1;
+}
+
+.notification {
+  display: flex;
+  justify-content: right;
+}
+.notification .notification-message {
+  padding: 5px;
+  background: #f1f1f1;
+  border: #666666;
+  border-radius: 6px;
 }
 
 /*# sourceMappingURL=authorization.css.map */

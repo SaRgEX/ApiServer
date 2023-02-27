@@ -51,7 +51,8 @@ func (s *server) configureRouter() {
 	s.router.LoadHTMLGlob("./web/templates/*.html")
 	s.router.GET("/", s.handlerIndex)
 	s.router.GET("/authorization", s.handlerAuthorization)
-	s.router.Handle("POST", "/student", s.handleStudentCreate())
+	s.router.GET("/registration", s.handleRegistration)
+	s.router.Handle("POST", "/student", s.handleStudentCreate)
 	s.router.Handle("POST", "/session", s.handleSessionsCreate)
 	private := s.router.Group("/private")
 	private.Use(s.authenticateStudent)
@@ -64,30 +65,28 @@ func (s *server) configureRouter() {
 	}
 }
 
-func (s *server) handleStudentCreate() gin.HandlerFunc {
+func (s *server) handleStudentCreate(c *gin.Context) {
 	type request struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`
 	}
-
-	return func(c *gin.Context) {
-		req := &request{}
-		if err := json.NewDecoder(c.Request.Body).Decode(req); err != nil {
-			s.error(c, http.StatusBadRequest, c.Error(err))
-			return
-		}
-
-		student := &model.Student{
-			Login:    req.Login,
-			Password: req.Password,
-		}
-		if err := s.store.Student().Create(student); err != nil {
-			s.error(c, http.StatusUnprocessableEntity, err)
-		}
-
-		student.Sanitaize()
-		s.respond(c, http.StatusCreated, student)
+	req := &request{}
+	if err := json.NewDecoder(c.Request.Body).Decode(req); err != nil {
+		s.error(c, http.StatusBadRequest, c.Error(err))
+		return
 	}
+
+	student := &model.Student{
+		Login:    req.Login,
+		Password: req.Password,
+	}
+	if err := s.store.Student().Create(student); err != nil {
+		s.error(c, http.StatusUnprocessableEntity, err)
+	}
+
+	student.Sanitaize()
+	s.respond(c, http.StatusCreated, student)
+
 }
 
 func (s *server) configureLogger() {
@@ -162,11 +161,13 @@ func (s *server) respond(c *gin.Context, code int, data interface{}) {
 }
 
 func (s *server) handlerIndex(context *gin.Context) {
-	context.HTML(http.StatusOK, "index.html", gin.H{
-		"message": "Hello world!",
-	})
+	context.HTML(http.StatusOK, "index.html", gin.H{})
 }
 
 func (s *server) handlerAuthorization(context *gin.Context) {
 	context.HTML(http.StatusOK, "authorization.html", gin.H{})
+}
+
+func (s *server) handleRegistration(context *gin.Context) {
+	context.HTML(http.StatusOK, "registration.html", gin.H{})
 }

@@ -1,5 +1,6 @@
+import {Error} from "./error.js";
 let button = document.getElementById("button")
-let pHeader = document.querySelector(".popup-header")
+let cont = document.body.querySelector(".container");
 button.onclick = () => {
     let inputs = document.querySelectorAll(".container > input")
 
@@ -17,38 +18,13 @@ function Authorization(data) {
     xhr.onload = function (e) {
         console.log(e.currentTarget.status)
         if (e.currentTarget.status !== 200) {
-            let response = JSON.parse(e.currentTarget.response)
-            CreateNotification(response.error)
-            if (pHeader.children.length > 1) {
-                pHeader.firstChild.remove()
-            }
+            let response = JSON.parse(e.currentTarget.responseText)
+            let err = new Error(response.error, cont, button);
+            err.CreateNotification()
+            console.log(err)
         } else {
             window.location.href = '/'
         }
     }
     xhr.send(JSON.stringify(data))
-}
-
-function CreateMessage(msg) {
-    let message = document.createElement("div")
-    message.classList.toggle("notification-message")
-    message.innerText = msg
-    return message;
-}
-
-function CreateNotification(msg) {
-    let notification = document.createElement("div")
-    notification.className = "notification"
-    notification.appendChild(CreateMessage(msg))
-    FadeIn(notification)
-    document.body.appendChild(notification)
-}
-
-function FadeIn(msg) {
-    setTimeout(() => {
-        msg.opacity = 0
-        setTimeout(() => {
-            msg.remove()
-        }, 1000)
-    }, 5000)
 }

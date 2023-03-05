@@ -3,7 +3,7 @@
   background-color: #333;
   font-family: Arial, Helvetica, sans-serif;
 }
-.navbar.a {
+.navbar > a {
   float: left;
   font-size: 16px;
   color: white;

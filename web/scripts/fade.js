@@ -1,26 +1,33 @@
 export class Fade {
-    container
-    constructor(container) {
-        this.container = container
+    message
+    constructor(message) {
+        this.message = message
     }
 
     In() {
-        this.container.style.opacity = "1"
+        this.message.style.opacity = "1"
         setTimeout(() => {
-            this.container.style.opacity = "0"
+            this.message.style.opacity = "0"
             setTimeout(() => {
-                this.container.remove();
-                this.container.removeAttribute("style")
+                this.message.remove();
+                this.removeDiv()
             }, 1000)
         }, 2000);
     }
 
     Out() {
-        this.container.style.opacity = "0"
+        this.message.style.opacity = "0"
         setTimeout(() => {
-            this.container.style.opacity = "1"
+            this.message.style.opacity = "1"
             setTimeout(() => {
             }, 1000)
         }, 2000);
+    }
+
+    removeDiv() {
+        let notification = document.querySelectorAll(".notification > .notification-message");
+        if (notification.length === 0) {
+            document.querySelector(".notification").remove()
+        }
     }
 }

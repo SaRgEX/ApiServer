@@ -10,6 +10,11 @@ type Student struct {
 	Login             string `json:"login"`
 	Password          string `json:"password,omitempty"`
 	EncryptedPassword string `json:"-"`
+	Name              string `json:"name"`
+	Surname           string `json:"surname"`
+	Patronymic        string `json:"patronymic"`
+	Address           string `json:"address"`
+	GroupId           int    `json:"group_id"`
 }
 
 func (s *Student) Validate() error {

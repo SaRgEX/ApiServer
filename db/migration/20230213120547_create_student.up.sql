@@ -1,6 +1,6 @@
 CREATE TABLE teacher
 (
-    id         serial  not null,
+    id         serial  not null primary key,
     name       varchar not null,
     surname    varchar not null,
     patronymic varchar not null,

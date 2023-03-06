@@ -11,6 +11,17 @@ export class Error {
         this.button = button
     }
 
+    Timer(progressBar) {
+        let interval = setInterval(() => {
+            if (progressBar.value > 0) {
+                progressBar.value--;
+            } else {
+                clearInterval(interval)
+            }
+        }, 30)
+
+    }
+
     CreateProgressBar() {
         let progressBar = document.createElement("progress");
         progressBar.classList.add("notification-progress");
@@ -25,28 +36,21 @@ export class Error {
         message.classList.add("notification-message")
         message.innerText = this.text
         message.appendChild(this.CreateProgressBar())
+        let fade = new Fade(message)
+        fade.In()
         return message;
     }
 
     CreateNotification() {
-        let notification = document.createElement("div")
-        notification.className = "notification"
+        let notification = document.body.querySelector(".notification")
+        if(!notification) {
+            notification = document.createElement("div")
+            notification.className = "notification"
+            console.log(notification)
+        }
         notification.appendChild(this.CreateMessage())
-        let fade = new Fade(notification)
-        fade.In()
         document.body.appendChild(notification)
         return notification
-    }
-
-    Timer(progressBar) {
-        let interval = setInterval(() => {
-            if (progressBar.value > 0) {
-                progressBar.value--;
-            } else {
-                clearInterval(interval)
-            }
-        }, 30)
-
     }
 
     ErrorData() {
@@ -54,4 +58,5 @@ export class Error {
         this.container.setAttribute("style", "border-color: #c03232;" +
             " box-shadow: 4px 4px 20px #ff0000")
     }
+
 }

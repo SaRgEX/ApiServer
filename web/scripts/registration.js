@@ -1,10 +1,11 @@
 import {Error} from "./error.js";
+
 let container = document.body.querySelector(".container");
 let button = document.getElementById("button")
 let inputsInfo = document.querySelectorAll(".info > input")
 let inputsLog = document.querySelectorAll(".logging > input")
 let group = document.querySelector("select")
-
+f()
 button.onclick = () => {
 
     let data = {};
@@ -26,17 +27,34 @@ function Registration(data) {
     xhr.onload = function (e) {
         console.log(e.currentTarget.status)
         if (e.currentTarget.status !== 200) {
-            console.log(e.currentTarget.response.replace("}{", ", "))
             let response = JSON.parse(e.currentTarget.response.replace("}{", ", "))
-            console.log(response)
-
-            console.log(response.error)
             let err = new Error(response.error, container, button);
             err.CreateNotification()
-            console.log(err)
         } else {
             window.location.href = '/'
         }
     }
     xhr.send(JSON.stringify(data))
+}
+
+function f() {
+    var x = new XMLHttpRequest();
+    x.onload = function (e) {
+        let response = e.currentTarget.response;
+        console.log(response)
+        // преобразование ответа сервера в массив
+        let options = JSON.parse(response).Group.id;
+        var select = document.getElementById('group');
+        console.log(options)
+        // очистка списка
+        while (select.options.length > 0) {
+            select.options.remove(0);
+        }
+        var option = document.createElement('option');
+        option.text = options;
+        console.log(option)
+        select.options.add(option);
+    };
+    x.open("GET", "/group", true);
+    x.send();
 }

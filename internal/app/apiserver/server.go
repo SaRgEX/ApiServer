@@ -52,6 +52,7 @@ func (s *server) configureRouter() {
 	s.router.GET("/", s.handlerIndex)
 	s.router.GET("/authorization", s.handlerAuthorization)
 	s.router.GET("/registration", s.handleRegistration)
+	s.router.GET("/group", s.selectGroup)
 	s.router.Handle("POST", "/student", s.handleStudentCreate)
 	s.router.Handle("POST", "/session", s.handleSessionsCreate)
 	private := s.router.Group("/private")
@@ -61,14 +62,18 @@ func (s *server) configureRouter() {
 		{
 			auth.GET("/whoAmI", s.handleWhoAmI)
 		}
-
 	}
 }
 
 func (s *server) handleStudentCreate(c *gin.Context) {
 	type request struct {
-		Login    string `json:"login"`
-		Password string `json:"password"`
+		Login      string `json:"login"`
+		Password   string `json:"password"`
+		Name       string `json:"name"`
+		Surname    string `json:"surname"`
+		Patronymic string `json:"patronymic"`
+		Address    string `json:"address"`
+		GroupId    int    `json:"group_id"`
 	}
 	req := &request{}
 	if err := json.NewDecoder(c.Request.Body).Decode(req); err != nil {
@@ -77,8 +82,13 @@ func (s *server) handleStudentCreate(c *gin.Context) {
 	}
 
 	student := &model.Student{
-		Login:    req.Login,
-		Password: req.Password,
+		Login:      req.Login,
+		Password:   req.Password,
+		Name:       req.Name,
+		Surname:    req.Surname,
+		Patronymic: req.Patronymic,
+		Address:    req.Address,
+		GroupId:    req.GroupId,
 	}
 	if err := s.store.Student().Create(student); err != nil {
 		s.error(c, http.StatusUnprocessableEntity, err)
@@ -86,7 +96,16 @@ func (s *server) handleStudentCreate(c *gin.Context) {
 
 	student.Sanitaize()
 	s.respond(c, http.StatusCreated, student)
+}
 
+func (s *server) selectGroup(c *gin.Context) {
+	group, err := s.store.Student().FindGroup()
+	if err != nil {
+		s.error(c, http.StatusInternalServerError, err)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"Group": group,
+	})
 }
 
 func (s *server) configureLogger() {

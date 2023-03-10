@@ -5,6 +5,7 @@ import (
 	"ApiServer/internal/app/store"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
@@ -103,6 +104,7 @@ func (s *server) selectGroup(c *gin.Context) {
 	if err != nil {
 		s.error(c, http.StatusInternalServerError, err)
 	}
+	fmt.Println(group)
 	c.JSON(http.StatusOK, gin.H{
 		"Group": group,
 	})

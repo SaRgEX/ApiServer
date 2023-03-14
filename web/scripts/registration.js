@@ -5,7 +5,6 @@ let button = document.getElementById("button")
 let inputsInfo = document.querySelectorAll(".info > input")
 let inputsLog = document.querySelectorAll(".logging > input")
 let group = document.querySelector("select")
-f()
 button.onclick = () => {
 
     let data = {};
@@ -27,7 +26,7 @@ function Registration(data) {
     xhr.onload = function (e) {
         console.log(e.currentTarget.status)
         if (e.currentTarget.status !== 201) {
-            let response = JSON.parse(e.currentTarget.response.replace("}{", ", "))
+            let response = JSON.parse(e.currentTarget.response)
             let err = new Error(response.error, container, button);
             err.CreateNotification()
         } else {
@@ -37,26 +36,23 @@ function Registration(data) {
     xhr.send(JSON.stringify(data))
 }
 
-function f() {
-    var x = new XMLHttpRequest();
+(function () {
+    let x = new XMLHttpRequest();
     x.open("GET", "/group", true);
     console.log(x)
     x.onload = function (e) {
         let response = e.currentTarget.response;
-        console.log(response)
         // преобразование ответа сервера в массив
-        let options = JSON.parse(response).Group.id;
-        console.log(options.type)
-        var select = document.getElementById('group');
-        console.log(options)
+        let options = JSON.parse(response).Group;
+        let select = document.getElementById('group');
         // очистка списка
         while (select.options.length > 0) {
             select.options.remove(0);
         }
-        var option = document.createElement('option');
-        option.text = options;
-        console.log(typeof Number(options.value))
-        select.options.add(option);
+        for (let i = 0; i <= options.length; i++) {
+            select.options.add(new Option(options[i].id, options[i].id));
+            select.selectedIndex = -1
+        }
     };
     x.send();
-}
+})()

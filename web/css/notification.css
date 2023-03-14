@@ -1,0 +1,25 @@
+.notification {
+  color: #f1f1f1;
+  position: fixed;
+  top: 0;
+  right: 0;
+  display: grid;
+  grid-auto-columns: auto;
+}
+.notification .notification-message {
+  transition: opacity 1s linear;
+  background: #333333;
+  padding: 5px;
+  border: #c03232 solid;
+  border-radius: 6px;
+}
+.notification .notification-message > progress {
+  color: #333;
+  height: 10%;
+  width: 100%;
+  display: block;
+  line-height: 21px;
+  text-align: center;
+}
+
+/*# sourceMappingURL=notification.css.map */

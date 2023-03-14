@@ -1,0 +1,25 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: block;
+  height: 100%;
+}
+body .container {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  place-content: normal;
+}
+body .container .left-column {
+  padding: 14px;
+  background: #212733;
+  border: #161b22 thin solid;
+  border-radius: 2px;
+  max-width: 350px;
+}
+
+/*# sourceMappingURL=homepage.css.map */

@@ -5,7 +5,6 @@ import (
 	"ApiServer/internal/app/store"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
@@ -93,6 +92,7 @@ func (s *server) handleStudentCreate(c *gin.Context) {
 	}
 	if err := s.store.Student().Create(student); err != nil {
 		s.error(c, http.StatusUnprocessableEntity, err)
+		return
 	}
 
 	student.Sanitaize()
@@ -104,7 +104,6 @@ func (s *server) selectGroup(c *gin.Context) {
 	if err != nil {
 		s.error(c, http.StatusInternalServerError, err)
 	}
-	fmt.Println(group)
 	c.JSON(http.StatusOK, gin.H{
 		"Group": group,
 	})
@@ -182,7 +181,7 @@ func (s *server) respond(c *gin.Context, code int, data interface{}) {
 }
 
 func (s *server) handlerIndex(context *gin.Context) {
-	context.HTML(http.StatusOK, "index.html", gin.H{})
+	context.HTML(http.StatusOK, "homepage.html", gin.H{})
 }
 
 func (s *server) handlerAuthorization(context *gin.Context) {

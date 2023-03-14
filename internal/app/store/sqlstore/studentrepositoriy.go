@@ -34,7 +34,7 @@ func (r *StudentRepository) Create(s *model.Student) error {
 func (r *StudentRepository) FindByLogin(login string) (*model.Student, error) {
 	s := &model.Student{}
 	if err := r.store.db.QueryRow(
-		"SELECT id, login, encrypted_password, group_id FROM student WHERE login = $1",
+		`SELECT id, login, encrypted_password, group_id FROM student WHERE login = $1`,
 		login,
 	).Scan(
 		&s.ID,
@@ -53,12 +53,16 @@ func (r *StudentRepository) FindByLogin(login string) (*model.Student, error) {
 func (r *StudentRepository) Find(id int) (*model.Student, error) {
 	s := &model.Student{}
 	if err := r.store.db.QueryRow(
-		"SELECT id, login, encrypted_password, group_id FROM student WHERE id = $1",
+		"SELECT id, login, encrypted_password, name, surname, patronymic, address, group_id FROM student WHERE id = $1",
 		id,
 	).Scan(
 		&s.ID,
 		&s.Login,
 		&s.EncryptedPassword,
+		&s.Name,
+		&s.Surname,
+		&s.Patronymic,
+		&s.Address,
 		&s.GroupId,
 	); err != nil {
 		if err == sql.ErrNoRows {
@@ -69,17 +73,23 @@ func (r *StudentRepository) Find(id int) (*model.Student, error) {
 	return s, nil
 }
 
-func (r *StudentRepository) FindGroup() (*model.Group, error) {
-	group := &model.Group{}
-	if err := r.store.db.QueryRow(
-		"SELECT id FROM \"group\"",
-	).Scan(
-		&group.Id,
-	); err != nil {
+func (r *StudentRepository) FindGroup() ([]*model.Group, error) {
+	groups := make([]*model.Group, 0)
+	rows, err := r.store.db.Query(
+		`SELECT id FROM "group"`,
+	)
+	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
 		}
 		return nil, err
 	}
-	return group, nil
+	for rows.Next() {
+		group := &model.Group{}
+		if err := rows.Scan(&group.Id); err != nil {
+			return nil, err
+		}
+		groups = append(groups, group)
+	}
+	return groups, nil
 }

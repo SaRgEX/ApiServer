@@ -1,0 +1,28 @@
+{{define "navbar"}}
+    <link rel="stylesheet" href="assets/css/navbar.css">
+    <header class="header">
+        <div class="navbar">
+            <div class="start">
+                <h2>Name of ...</h2>
+            </div>
+            <div class="center">
+                <p>About</p>
+            </div>
+            <div class="navbar-link">
+                <img src="https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885__480.jpg"
+                     alt=""
+                     class="round"
+                     sizes="24"
+                     width="24"
+                     height="24">
+                <span class="dropdown-caret"></span>
+                <div class="summary arrow-5-top">
+                    <a href="/registration">Sign up</a>
+                    <a href="/authorization">Sign in</a>
+                    <a href="/private/whoAmI">Profile</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <script src="assets/scripts/navbar.js"></script>
+{{end}}
